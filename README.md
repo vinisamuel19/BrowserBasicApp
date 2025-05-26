@@ -31,7 +31,7 @@ A minimal, secure, fullscreen desktop app built with [Electron](https://www.elec
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/yourusername/electron-web-viewer.git
+git clone https://github.com/vinisamuel19/electron-web-viewer.git
 cd electron-web-viewer
 npm install
 npm start
