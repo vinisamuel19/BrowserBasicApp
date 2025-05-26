@@ -1,0 +1,256 @@
+<!--
+    Purpose: Main HTML file for the Electron-based Simple Web Viewer app. Provides a fullscreen Chromium-based browser window with a secure close button requiring authentication.
+    Author: Vinicius
+    Version: 1.10.2
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Web Viewer</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,500,600&display=swap" rel="stylesheet">
+    <style>
+        /*
+            Main CSS for layout and Windows 11 Fluent UI inspired design.
+            - Uses Open Sans font for modern look.
+            - Applies glassmorphism (blur) to modal and form.
+            - Ensures fullscreen iframe and floating close button.
+        */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Open Sans', Arial, sans-serif;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: #f5f5f5;
+        }
+
+        iframe {
+            border: none;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        #close-btn {
+            position: fixed;
+            right: 32px;
+            bottom: 32px;
+            z-index: 1000;
+            background: #ffe50000;
+            color: #3f0d70;
+            border: none;
+            border-radius: 18px;
+            width: 64px;
+            height: 64px;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 4px 24px 0 rgba(63, 13, 112, 0.10), 0 1.5px 4px 0 rgba(63, 13, 112, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+            backdrop-filter: blur(8px);
+            outline: none;
+        }
+
+        #close-btn:hover,
+        #close-btn:focus {
+            background: #ffe500cc;
+            color: #fff;
+            box-shadow: 0 6px 32px 0 rgba(63, 13, 112, 0.18);
+        }
+
+        #close-btn:active {
+            background: #ffe500ee;
+        }
+
+        #close-btn svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        #auth-modal {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(63, 13, 112, 0.35);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        #auth-modal.active {
+            display: flex;
+        }
+
+        #auth-box {
+            background: rgba(255, 255, 255, 0.40);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            padding: 36px 28px 28px 28px;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(63, 13, 112, 0.12);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 320px;
+            border: 1.5px solid #3f0d7022;
+            align-items: stretch;
+        }
+
+        #auth-box input {
+            padding: 12px 10px;
+            font-size: 17px;
+            border: 1.5px solid #3f0d7033;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            color: #3f0d70;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        #auth-box input:focus {
+            border: 1.5px solid #3f0d70;
+        }
+
+        #auth-box button {
+            padding: 12px;
+            background: #3f0d7000;
+            color: #3f0d70;
+            border: 1.5px solid #3f0d70;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border 0.2s;
+            box-shadow: 0 2px 8px 0 rgba(63, 13, 112, 0.08);
+        }
+
+        #auth-box button:hover,
+        #auth-box button:focus {
+            background: #3f0d70;
+            color: #fff;
+            border: 1.5px solid #3f0d70;
+        }
+
+        #auth-box button:active {
+            background: #3f0d70cc;
+        }
+
+        #auth-box-title {
+            font-weight: 600;
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #3f0d70;
+            letter-spacing: 0.01em;
+            text-align: center;
+        }
+
+        #auth-error {
+            color: #e74c3c;
+            font-size: 15px;
+            min-height: 18px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe src="https://icbeutechzone.com" title="Web Viewer" allowfullscreen></iframe>
+    <!--
+        Close Button
+        - Opens authentication modal on click.
+        - Styled for Windows 11 Fluent UI.
+    -->
+    <button id="close-btn" title="Close App" aria-label="Close App">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#3f0d70" stroke-width="2"/><path d="M9 9L15 15M15 9L9 15" stroke="#3f0d70" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <!--
+        Authentication Modal
+        - Requires username and password to close the app.
+        - Uses glassmorphism and accent color.
+    -->
+    <div id="auth-modal">
+        <form id="auth-box" autocomplete="off">
+            <div id="auth-box-title">Authentication Required</div>
+            <input id="user" type="text" placeholder="Username" required autofocus />
+            <input id="pass" type="password" placeholder="Password" required />
+            <div id="auth-error"></div>
+            <button type="submit">Close App</button>
+        </form>
+    </div>
+    <script>
+        /**
+         * Handles the authentication modal and close button logic.
+         * - Shows modal on close button click.
+         * - Validates credentials and closes app if correct.
+         * - Handles modal dismissal on background click.
+         *
+         * @author Vinicius
+         */
+        const closeBtn = document.getElementById('close-btn');
+        const authModal = document.getElementById('auth-modal');
+        const authBox = document.getElementById('auth-box');
+        const authError = document.getElementById('auth-error');
+
+        /**
+         * Show authentication modal and reset fields.
+         * No parameters.
+         * No return value.
+         */
+        closeBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+            authError.textContent = '';
+            document.getElementById('user').value = '';
+            document.getElementById('pass').value = '';
+            setTimeout(() => document.getElementById('user').focus(), 100);
+        });
+
+        /**
+         * Handle authentication form submission.
+         * @param {Event} e - Form submit event
+         * @returns {void}
+         * Shows error if credentials are invalid. Calls window.closeApp() if valid.
+         */
+        authBox.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('user').value;
+            const pass = document.getElementById('pass').value;
+            if (user === 'admin' && pass === 'admin') {
+                // Calls secure Electron preload API to close the app
+                window.closeApp && window.closeApp();
+            } else {
+                authError.textContent = 'Invalid credentials';
+            }
+        });
+
+        /**
+         * Dismiss modal when clicking outside the form.
+         * @param {MouseEvent} e
+         * @returns {void}
+         */
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) authModal.classList.remove('active');
+        });
+    </script>
+</body>
+
+</html>
