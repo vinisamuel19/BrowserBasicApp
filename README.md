@@ -2,8 +2,6 @@
 
 A minimal, secure, fullscreen desktop app built with [Electron](https://www.electronjs.org/) that displays a specific website inside a Chromium-based iframe. Designed for kiosk environments, digital signage, or locked-down access to web portals.
 
-![screenshot](assets/screenshot.png) <!-- Optional: Add screenshot path -->
-
 ---
 
 ## 🚀 Features
