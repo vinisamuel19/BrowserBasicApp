@@ -1,5 +1,6 @@
 // Preload script for context isolation
 // No direct Node.js access in renderer
+
 const { contextBridge, ipcRenderer } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
